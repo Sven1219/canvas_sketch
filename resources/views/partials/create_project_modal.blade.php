@@ -1197,7 +1197,7 @@
         $('#select_floor').html('');
         $(".floor_sets").remove();
         for (let floor = 0; floor < current_building.floors.length; floor ++) {
-            $('#select_floor').append(`<option value='${floor}'>Floor ${floor + 1}</option>`);
+            $('#select_floor').append(`<option value='${floor}'>Floor ${Number(floor) + 1}</option>`);
             var txt = "<div class='floor_sets flex justify-between items-center gap-2 border rounded-md px-2 py-1'>\
                     <input type='checkbox' id='floor_check_" + floor +"' class='text-rose-500' />\
                     <input type='text' name='' required='' value='' placeholder='Type' \
@@ -1206,7 +1206,7 @@
                     class='floor_input w-full border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2'>\
                     <input type='text' name='' required='' value='" + current_building.floors[floor] + "' placeholder='Floor Name' \
                     class='floor_input w-full border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2'>\
-                    <i id='floor_delete_" + floor +"' class='fa fa-times text-rose-500 border rounded-3xl border-rose-500 px-1 py-0.5' aria-hidden='true'></i>\
+                    <button id='delete_floor" + floor + "' onclick='delete_floor(" + floor + ")'><i class='fa fa-times text-rose-500 border rounded-3xl border-rose-500 px-1 py-0.5' aria-hidden='true'></i><button>\
                     </div>";
             $("#main_floor").before(txt);
         }
@@ -1234,13 +1234,23 @@
         $('#select_floor')[0].dispatchEvent(new Event('change'));
     }
 
-    function delete_floor() {
-        var floor = $('#select_floor').val();
-    }
+    function delete_floor(id) {
+        console.log(id);
+        if(current_building.floors.length == 1) {
+            alert("at least one floor");
+            return;
+        }
+        $("#delete_floor"+id).parent().remove();
+        current_building.floors.splice(id);
+        $('#select_floor').children('option').eq(id).remove()
+        sketch_board.delete_floor(id);
+        if(id == 0) current_floor = 1;
+        else current_floor = 0;
 
+    }
     function onSelectFloor(floor) {
         if (current_building.floors.length <= floor) {
-            $('#select_floor').append(`<option value='${floor}'>Floor ${floor + 1}</option>`);
+            $('#select_floor').append(`<option value='${floor}'>Floor ${Number(floor) + 1}</option>`);
             current_building.floors.push(`Floor ${floor + 1}`);
             $('#select_floor').val(floor);
             current_building.roof_floor = floor;
@@ -1253,7 +1263,7 @@
                     class='floor_input w-full border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2'>\
                     <input type='text' name='' required='' value='" + current_building.floors[floor] + "' placeholder='Floor Name' \
                     class='floor_input w-full border border-gray-300 text-gray-900 rounded-lg focus:ring-primary-600 focus:border-primary-600 block p-2'>\
-                    <i id='floor_delete_" + floor +"' class='fa fa-times text-rose-500 border rounded-3xl border-rose-500 px-1 py-0.5' aria-hidden='true'></i>\
+                    <button id='delete_floor" + floor + "' onclick='delete_floor(" + floor + ")'><i class='fa fa-times text-rose-500 border rounded-3xl border-rose-500 px-1 py-0.5' aria-hidden='true'></i><button>\
                     </div>";
             $("#main_floor").before(txt);
         }

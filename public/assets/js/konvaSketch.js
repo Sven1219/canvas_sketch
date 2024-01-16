@@ -6,7 +6,8 @@ class KonvaSketch {
         on_mode_changed,
         on_select_building,
         json = null,
-        buildings = []
+        buildings = [],
+        selectedShapes = [],
         // sub_type = null
     }) {
         this.on_mode_changed = on_mode_changed;
@@ -309,6 +310,12 @@ class KonvaSketch {
         this.layer.find(`#${id}_label`)[0].visible(visible);
         this.layer.find(`#${id}_area_label`)[0].visible(visible);
     }
+    removeRoom(node) {
+        var id = node.id();
+        node.remove();
+        this.layer.find(`#${id}_label`)[0].remove();
+        this.layer.find(`#${id}_area_label`)[0].remove();
+    }
     select_floor(floor) {
         if (!this.parent_node.hasName('building')) return ;
         this.deselect();
@@ -320,6 +327,20 @@ class KonvaSketch {
         });
         this.current_floor = floor;
         this.check_error();
+    }
+    delete_floor(floor) {
+        if (!this.parent_node.hasName('building')) return ;
+        this.deselect();
+        
+        var id = this.parent_node.id();
+        var show_id = 0;
+        if(floor == 0) show_id = 1;
+        this.layer.find('.room').forEach((room) => {
+            if (room.id().startsWith(id + '_floor_' + floor)) this.removeRoom(room);
+        });
+
+        this.select_floor(show_id);
+        this.save_history();
     }
     set_canvas_mode(mode) {
 
@@ -562,6 +583,21 @@ class KonvaSketch {
             if (this.is_movable) this.stage.container().style.cursor = 'move';
         }
     }
+    updateSelection(shape) {
+        alert(1);
+        var shapeIndex = selectedShapes.indexOf(shape);
+        if (shapeIndex === -1) {
+            // Shape is not in the array, add it
+            selectedShapes.push(shape);
+        } else {
+            // Shape is already in the array, remove it
+            selectedShapes.splice(shapeIndex, 1);
+        }
+        // Update the visual appearance of the shape to show it's selected
+        // For example, you can change its opacity or stroke
+        shape.opacity(shapeIndex === -1 ? 0.5 : 1);
+        layer.draw();
+    }
     delete_one(node) {
         if (node.hasName('building')) {
             this.buildings = this.buildings.filter(building => building.id != node.id());
@@ -583,9 +619,21 @@ class KonvaSketch {
         if (node.hasName('building')) {
             this.buildings = this.buildings.filter(building => building.id != node.id());
         }
-        this.layer.find('#' + node.id() + '_label')[0].rotate(45);
-        this.layer.find('#' + node.id() + '_area_label')[0].rotate(45);
-        node.rotate(45);
+        this.layer.find('#' + node.id() + '_label')[0].rotate(90);
+        this.layer.find('#' + node.id() + '_area_label')[0].rotate(90);
+        node.rotate(90);
+    }
+    rotateAroundCenter(node, rotation) {
+        //current rotation origin (0, 0) relative to desired origin - center (node.width()/2, node.height()/2)
+        const topLeft = { x: -node.width() / 2, y: -node.height() / 2 };
+        const current = rotatePoint(topLeft, Konva.getAngle(node.rotation()));
+        const rotated = rotatePoint(topLeft, Konva.getAngle(rotation));
+        const dx = rotated.x - current.x,
+          dy = rotated.y - current.y;
+      
+        node.rotation(rotation);
+        node.x(node.x() + dx);
+        node.y(node.y() + dy);
     }
     rotate_node() {
         if(this.selected) {
